@@ -43,16 +43,6 @@ class AutoGenerateAccessor implements ListenerInterface
             return;
         }
 
-        $proxyDir = $config->get('php-accessor.proxy_root_directory') . DIRECTORY_SEPARATOR . 'proxy';
-
-        if ($config->get('php-accessor.scan_cacheable') === true && is_dir($proxyDir)) {
-            $finder = new Finder();
-            $finder->files()->name('*.php')->in($proxyDir);
-            if ($finder->count() > 0) {
-                return;
-            }
-        }
-
         $pid = pcntl_fork();
         if ($pid == -1) {
             throw new Exception('The process fork failed');
@@ -84,6 +74,16 @@ class AutoGenerateAccessor implements ListenerInterface
     private function genProxyFile(): void
     {
         $config = $this->container->get(ConfigInterface::class);
+
+        $proxyDir = $config->get('php-accessor.proxy_root_directory') . DIRECTORY_SEPARATOR . 'proxy';
+
+        if ($config->get('php-accessor.scan_cacheable') === true && is_dir($proxyDir)) {
+            $finder = new Finder();
+            $finder->files()->name('*.php')->in($proxyDir);
+            if ($finder->count() > 0) {
+                exit;
+            }
+        }
 
         $this->removeProxies($config->get('php-accessor.proxy_root_directory'));
         $classes = AnnotationCollector::getClassesByAnnotation(HyperfData::class);
